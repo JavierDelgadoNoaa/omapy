@@ -1,0 +1,27 @@
+[BASIC]
+plots = ght_line
+
+[ght_line]
+title = {model_name} :: {sd:%m-%d-%Y @ %H}z\nGeoHeight ({fieldUnits})
+fields = geopotential_height
+# TODO : Make level_type consistent for MSLP (currently mslDelta for grib and '-' for others)
+level_types = isobaric
+units = dam
+#contour_levels = 3000:6000:60
+contour_levels = 300:600:6
+cbar_on_top = yes ; to keep padding ok
+#contour_levels = min:max:60
+file_name = ght_f{fhr:04d}.png
+type = line
+colors = blue
+labels = yes
+level_lookup_setting = exact
+slab_retrieval_setting = exact
+plots_per_figure = 1
+#mp4_file = ght.mp4
+#animated_gif_file = _ght.gif
+mp4_fps = 2 ; protip: 1/2 for 6hrly, 5 for hourly
+plot_colorbar_bottom_freq = 999
+plot_colorbar_right_freq = 999
+isobaric_levels_hPa = 500
+

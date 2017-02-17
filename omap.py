@@ -11,6 +11,13 @@ config file. See sample config file for details. It is possible to specify
 multiple config files, either by separating them by commas _only_ (no spaces!). e.g. one.conf,two.conf
 or as separate arguments with ending in .conf, .cfg, or .config
 
+USAGE
+omap.py [options] <config file1[,config_file2,...]> "\
+          "[config_fileN ... config_fileN+M] [input_file1,...input_fileN]"
+config files are read in the order they are passed in. If config
+override option(s) are given (i.e. -o option), they will override the
+final configuration regardless of where in the command line they are put
+
 TODO
  - Read fhr from metadata when possible - add get_fhr() to encapsulate
  - horz interp for vectors ?
@@ -115,6 +122,9 @@ def __parse_args():
     #parser.add_option("-c", "--config", dest="config_file")
     parser.add_option("-l", "--log-level", dest="log_level", default=logging.INFO,
                       help="(0-100 or constant defined in the logging module")
+    parser.add_option("-o", "--conf-override", dest="conf_overrides",
+                      action="append", 
+                      help="Override config setting (section.item=value)")
     (options, args) = parser.parse_args()
     
     input_files = None
@@ -158,7 +168,7 @@ def __parse_args():
             log_level = getattr(logging, options.log_level)
         except:
             print 'Unrecognized log level:', options.log_level, '. Not setting.'
-    return (input_files, config_files, log_level)
+    return (input_files, config_files, log_level, options.conf_overrides)
 
 def libstring_to_func(lib_and_func):
     """ 
@@ -1437,13 +1447,22 @@ if __name__ == "__main__":
     g_animation_img = {}
     g_temp_img_files = [] # will purge at end
 
+    # Parse args, read in config settings, and override any config settings
     confbasic = lambda param: conf.get("BASIC", param)
-    (infiles, config_files, log_level) = __parse_args()
     #import pdb ; pdb.set_trace()
+    (infiles, config_files, log_level, conf_overrides) = __parse_args()
     log = _default_log(log2stdout=log_level, name="omappy")
     conf = ConfigParser()
     conf.optionxform = str # retain capitalization
     conf.read(config_files)
+    for opt in conf_overrides:
+        try:
+            lhs,value = opt.split("=") 
+            sec,item = lhs.split(".")
+        except ValueError:
+            raise Exception("Override option should be in format: section.item=value")
+        conf.set(sec, item, value)
+
     g_paths = dict(conf.items("paths"))
 
     # Get start date, duration, and frequency
